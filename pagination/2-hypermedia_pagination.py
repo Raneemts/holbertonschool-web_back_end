@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 """
-Hypermedia pagination
+nyes
 """
-
 import csv
 import math
-from typing import List, Tuple, Dict, Any
-
-
-def index_range(page: int, page_size: int) -> Tuple[int, int]:
-    """Return a tuple of start index and end index for pagination."""
-    start = (page - 1) * page_size
-    end = page * page_size
-    return start, end
+from typing import List, Dict
 
 
 class Server:
@@ -31,34 +23,56 @@ class Server:
                 reader = csv.reader(f)
                 dataset = [row for row in reader]
             self.__dataset = dataset[1:]
+
         return self.__dataset
 
+    def index_range(self, page: int, page_size: int) -> tuple:
+        """a function that"""
+        return ((page * page_size - page_size), (page * page_size))
+
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        """Return the requested page of the dataset."""
-        assert isinstance(page, int) and page > 0
-        assert isinstance(page_size, int) and page_size > 0
-
-        start, end = index_range(page, page_size)
-        data = self.dataset()
-
-        if start >= len(data):
+        """
+        Get page
+        """
+        assert type(page) == int
+        assert type(page_size) == int
+        assert page > 0
+        assert page_size > 0
+        indx = self.index_range(page, page_size)
+        start = indx[0]
+        end = indx[1]
+        x = start
+        result = []
+        csv_file = self.dataset()
+        if len(csv_file) < end:
             return []
-        return data[start:end]
 
-    def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict[str, Any]:
-        """Return hypermedia-style pagination info."""
-        data_page = self.get_page(page, page_size)
-        dataset_len = len(self.dataset())
-        total_pages = math.ceil(dataset_len / page_size)
+        while start != end:
+            result.append(csv_file[start])
+            start += 1
 
-        next_page = page + 1 if page < total_pages and len(data_page) > 0 else None
-        prev_page = page - 1 if page > 1 else None
+        return result
 
-        return {
-            "page_size": len(data_page),
-            "page": page,
-            "data": data_page,
-            "next_page": next_page,
-            "prev_page": prev_page,
-            "total_pages": total_pages,
-        }
+    def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict[str, int]:
+        """
+            Get hyper
+        """
+        total_pages = len(self.dataset()) / page_size
+        test = len(self.dataset()) % page_size
+        if test != 0:
+            total_pages += 1
+        data = self.get_page(page, page_size)
+        next_page = page + 1
+        if self.get_page(page + 1, page_size) == []:
+            next_page = None
+        prev_page = page - 1
+        if prev_page == 0:
+            prev_page = None
+        result = {
+                    'page_size': page_size,
+                    'page': page, 'data': data,
+                    'next_page': next_page,
+                    'prev_page': prev_page,
+                    'total_pages': int(total_pages)
+                }
+        return result
