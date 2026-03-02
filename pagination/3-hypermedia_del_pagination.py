@@ -24,7 +24,6 @@ class Server:
                 reader = csv.reader(f)
                 dataset = [row for row in reader]
             self.__dataset = dataset[1:]
-
         return self.__dataset
 
     def indexed_dataset(self) -> Dict[int, List]:
@@ -32,7 +31,6 @@ class Server:
         """
         if self.__indexed_dataset is None:
             dataset = self.dataset()
-            # per project instructions: keep only first 1000 in variable (even if not used)
             truncated_dataset = dataset[:1000]
             self.__indexed_dataset = {i: dataset[i] for i in range(len(dataset))}
         return self.__indexed_dataset
