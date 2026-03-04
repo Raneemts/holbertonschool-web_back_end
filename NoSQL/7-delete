@@ -1,0 +1,3 @@
+// deletes all docs with specified field
+db.school.deleteMany( { name: "Holberton school" } )
+
