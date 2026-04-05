@@ -44,17 +44,13 @@ const app = http.createServer(async (req, res) => {
     res.end('Hello Holberton School!');
   } else if (req.url === '/students') {
     const dbPath = process.argv[2];
-    let body = 'This is the list of our students\n';
-
     try {
       const result = await countStudents(dbPath);
-      body += result;
       res.writeHead(200);
-      res.end(body);
+      res.end(`This is the list of our students\n${result}`);
     } catch (err) {
-      body += err.message;
       res.writeHead(200);
-      res.end(body);
+      res.end(`This is the list of our students\n${err.message}`);
     }
   } else {
     res.writeHead(404);
