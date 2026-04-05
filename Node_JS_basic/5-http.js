@@ -1,34 +1,67 @@
 const http = require('http');
+const fs = require('fs');
 
-const countStudents = require('./3-read_file_async');
+function countStudents(path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, 'utf8', (err, data) => {
+      if (err) {
+        reject(new Error('Cannot load the database'));
+        return;
+      }
 
-const args = process.argv.slice(2);
+      const lines = data.split('\n').filter((line) => line.trim() !== '');
+      const students = lines.slice(1);
 
-const hostname = '127.0.0.1';
-const port = 1245;
+      if (students.length === 0) {
+        resolve(`Number of students: 0`);
+        return;
+      }
+
+      const fields = {};
+      students.forEach((student) => {
+        const parts = student.split(',');
+        const firstName = parts[0];
+        const field = parts[3];
+        if (!fields[field]) fields[field] = [];
+        fields[field].push(firstName);
+      });
+
+      let output = `Number of students: ${students.length}`;
+      for (const [field, names] of Object.entries(fields)) {
+        output += `\nNumber of students in ${field}: ${names.length}. List: ${names.join(', ')}`;
+      }
+
+      resolve(output);
+    });
+  });
+}
 
 const app = http.createServer(async (req, res) => {
-  res.statusCode = 200;
   res.setHeader('Content-Type', 'text/plain');
 
-  const { url } = req;
+  if (req.url === '/') {
+    res.writeHead(200);
+    res.end('Hello Holberton School!');
+  } else if (req.url === '/students') {
+    const dbPath = process.argv[2];
+    let body = 'This is the list of our students\n';
 
-  if (url === '/') res.end('Hello Holberton School!');
-  else if (url === '/students') {
-    res.write('This is the list of our students\n');
     try {
-      const students = await countStudents(args.toString());
-      res.end(`${students.join('\n')}`);
-    } catch (error) {
-      res.end(error.message);
+      const result = await countStudents(dbPath);
+      body += result;
+      res.writeHead(200);
+      res.end(body);
+    } catch (err) {
+      body += err.message;
+      res.writeHead(200);
+      res.end(body);
     }
+  } else {
+    res.writeHead(404);
+    res.end('Not found');
   }
-  res.statusCode = 404;
-  res.end();
 });
 
-app.listen(port, hostname, () => {
-  // console.log(`Server running at http://${hostname}:${port}/`);
-});
+app.listen(1245);
 
 module.exports = app;
