@@ -3,6 +3,10 @@ const fs = require('fs');
 
 function countStudents(path) {
   return new Promise((resolve, reject) => {
+    if (!path) {
+      reject(new Error('Cannot load the database'));
+      return;
+    }
     fs.readFile(path, 'utf8', (err, data) => {
       if (err) {
         reject(new Error('Cannot load the database'));
@@ -11,11 +15,6 @@ function countStudents(path) {
 
       const lines = data.split('\n').filter((line) => line.trim() !== '');
       const students = lines.slice(1);
-
-      if (students.length === 0) {
-        resolve(`Number of students: 0`);
-        return;
-      }
 
       const fields = {};
       students.forEach((student) => {
@@ -36,7 +35,7 @@ function countStudents(path) {
   });
 }
 
-const app = http.createServer(async (req, res) => {
+const app = http.createServer((req, res) => {
   res.setHeader('Content-Type', 'text/plain');
 
   if (req.url === '/') {
@@ -44,14 +43,15 @@ const app = http.createServer(async (req, res) => {
     res.end('Hello Holberton School!');
   } else if (req.url === '/students') {
     const dbPath = process.argv[2];
-    try {
-      const result = await countStudents(dbPath);
-      res.writeHead(200);
-      res.end(`This is the list of our students\n${result}`);
-    } catch (err) {
-      res.writeHead(200);
-      res.end(`This is the list of our students\n${err.message}`);
-    }
+    countStudents(dbPath)
+      .then((result) => {
+        res.writeHead(200);
+        res.end(`This is the list of our students\n${result}`);
+      })
+      .catch((err) => {
+        res.writeHead(200);
+        res.end(`This is the list of our students\n${err.message}`);
+      });
   } else {
     res.writeHead(404);
     res.end('Not found');
