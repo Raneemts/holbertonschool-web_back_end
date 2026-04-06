@@ -12,17 +12,17 @@ export default class StudentsController {
         sortedFields.forEach((field) => {
           output += `\nNumber of students in ${field}: ${fields[field].length}. List: ${fields[field].join(', ')}`;
         });
-        res.status(200).type('text/plain').send(output);
+        res.status(200).send(output);
       })
-      .catch(() => {
-        res.status(500).type('text/plain').send('Cannot load the database');
+      .catch((err) => {
+        res.status(500).send(err.message);
       });
   }
 
   static getAllStudentsByMajor(req, res) {
     const { major } = req.params;
     if (major !== 'CS' && major !== 'SWE') {
-      res.status(500).type('text/plain').send('Major parameter must be CS or SWE');
+      res.status(500).send('Major parameter must be CS or SWE');
       return;
     }
 
@@ -30,10 +30,10 @@ export default class StudentsController {
     readDatabase(dbPath)
       .then((fields) => {
         const students = fields[major] || [];
-        res.status(200).type('text/plain').send(`List: ${students.join(', ')}`);
+        res.status(200).send(`List: ${students.join(', ')}`);
       })
-      .catch(() => {
-        res.status(500).type('text/plain').send('Cannot load the database');
+      .catch((err) => {
+        res.status(500).send(err.message);
       });
   }
 }
